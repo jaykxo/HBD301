@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
 import mysql from 'mysql2/promise';
 
-// ✅ JWT 토큰 생성 함수 (birth 추가)
+// JWT 토큰 생성 함수
 const make_token = (user: { user_id: string; user_nickname: string; birth: string }) => {
   return jwt.sign(
     {
@@ -46,16 +46,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Invalid user_id or password' });
     }
 
-    // 비밀번호 비교 (평문 비교, 해싱 안 했을 경우)
+    // 비밀번호 확인
     if (user.user_pw !== user_pw) {
       return res.status(401).json({ error: 'Invalid user_id or password' });
     }
 
-    // ✅ JWT 발급 (birth 포함)
+    // JWT 발급 
     const token = make_token({
       user_id: user.user_id,
       user_nickname: user.user_nickname,
-      birth: user.birth, // DATE 타입일 경우 문자열로 들어옴 (예: "2001-12-05")
+      birth: user.birth,
     });
 
     return res.status(200).json({ access_token: token });
