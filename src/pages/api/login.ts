@@ -2,7 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
 import mysql from 'mysql2/promise';
 
-// JWT 토큰 생성 함수 
+// JWT 토큰 생성 함수
+
 const make_token = (user: { user_id: string; user_nickname: string; birth: string }) => {
   return jwt.sign(
     {
@@ -55,7 +56,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const token = make_token({
       user_id: user.user_id,
       user_nickname: user.user_nickname,
+
       birth: user.birth, 
+      
     });
 
     return res.status(200).json({ access_token: token });
