@@ -26,11 +26,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       database: process.env.DB_NAME,
     });
 
-    await connection.execute(
-      'UPDATE Letter SET title = ?, content = ? WHERE id = ? AND author = ? AND deleted_at IS NULL',
-      [title, content, letter_id, author]
+    // 권한 확인: 해당 편지가 본인의 것인지?
+    const [rows] = await connection.execute(
+      'SELECT id FROM Letter WHERE id = ? AND author = ? AND deleted_at IS NULL',
+      [letter_id, author]
     );
 
+    if ((rows as any[]).length === 0) {
+      await connection.end();
+      return res.status(403).json({ error: '수정 권한이 없습니다.' });
+    }
+
+    // 실제 업데이트
+    await connection.execute(
+      'UPDATE Letter SET title = ?, content = ? WHERE id = ?',
+      [title, content, letter_id]
+    );
+
+    await connection.end();
     return res.status(200).json({ message: '편지 수정 완료' });
   } catch (error: any) {
     console.error('편지 수정 오류:', error.message);

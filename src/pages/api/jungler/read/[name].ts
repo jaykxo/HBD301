@@ -1,15 +1,14 @@
-// pages/api/letter/r.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import mysql from 'mysql2/promise';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { receiver } = req.query;
+  const { name } = req.query;
 
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  if (!receiver) {
+  if (!name || typeof name !== 'string') {
     return res.status(400).json({ error: 'Receiver ID is required' });
   }
 
@@ -23,9 +22,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const [rows] = await connection.execute(
       'SELECT * FROM Letter WHERE receiver = ? AND deleted_at IS NULL ORDER BY created_at DESC',
-      [receiver]
+      [name]
     );
 
+    await connection.end();
     return res.status(200).json(rows);
   } catch (error: any) {
     console.error('편지 조회 오류:', error.message);

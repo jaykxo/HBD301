@@ -1,3 +1,4 @@
+// 댓글 삭제 시 복구
 import type { NextApiRequest, NextApiResponse } from 'next';
 import jwt from 'jsonwebtoken';
 import mysql from 'mysql2/promise';
