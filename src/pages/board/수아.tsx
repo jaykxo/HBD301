@@ -1,31 +1,31 @@
 /* pages/board/[name].tsx */
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
 import CommentInput from '@/components/comments/CommentInput';
 
-type Letter = { author: string; content: string };
+type Letter  = { author: string; content: string };
 type Comment = { id: number; postId: string; author: string; content: string };
 
 export default function BoardPage() {
   const router = useRouter();
-  const { name } = router.query;          // /board/수아 → name === '수아'
+  const { name } = router.query;                 // ex) /board/수아
 
-  /* 0️⃣  라우터 준비 전에는 렌더링 X */
+  /* 0️⃣ 라우터가 준비되지 않았으면 아무것도 렌더링하지 않음 */
   if (!router.isReady) return null;
 
-  /* 1️⃣  name 이 '수아'가 아닐 때는 대체 화면 */
+  /* 1️⃣ name 이 '수아'가 아니라면 404 대체 화면(또는 리다이렉트) */
   if (name !== '수아') {
     return <p style={{ padding: 40 }}>잘못된 접근입니다.</p>;
-    // 또는 router.push('/404');  // 원하면 404 페이지로 이동
+    // 또는 router.push('/404');
   }
 
-  /* ── 이하부터 “수아” 게시판 전용 로직 ───────────────────────── */
+  /* ── 게시판 로직 ───────────────────────────── */
 
-  const currentUser = '김재현';
+  const currentUser = '김재현';          // 임시 로그인 사용자
 
   const [letters, setLetters] = useState<Letter[]>([
-    { author: '최우석', content: '놀러왔어?' },
-    { author: '김재현', content: '올해도 좋은 일만 가득하길!' },
+    { author: '이윤아', content: 'ㅊㅊ' },
+    { author: '박준식', content: 'oops' },
   ]);
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -33,7 +33,7 @@ export default function BoardPage() {
 
   const [newLetter, setNewLetter] = useState({ content: '' });
 
-  const [editIndex, setEditIndex]   = useState<number | null>(null);
+  const [editIndex, setEditIndex]     = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
 
   const [commentEditId, setCommentEditId]           = useState<number | null>(null);
@@ -62,8 +62,8 @@ export default function BoardPage() {
   };
 
   /* ---------- 편지 삭제 ---------- */
-  const handleDelete = (idx: number) =>
-    setLetters((prev) => prev.filter((_, i) => i !== idx));
+  const handleDelete = (index: number) =>
+    setLetters((prev) => prev.filter((_, i) => i !== index));
 
   /* ---------- 댓글 ---------- */
   const handleCommentInputChange = (i: number, v: string) =>
@@ -71,7 +71,6 @@ export default function BoardPage() {
 
   const handleCommentSubmit = (i: number, v: string) => {
     if (!v.trim()) return;
-
     const c: Comment = {
       id: Date.now(),
       postId: `수아-${i}`,
@@ -101,15 +100,14 @@ export default function BoardPage() {
       {/* 새 편지 작성 */}
       {currentUser !== name && (
         <form onSubmit={handleSubmit} style={{ marginTop: '2rem' }}>
-          <h2>편지 쓰기</h2>
           <textarea
             value={newLetter.content}
             onChange={(e) => setNewLetter({ content: e.target.value })}
             placeholder="내용을 입력하세요"
             required
-            style={{ display: 'block', width: '100%', marginBottom: '1rem' }}
+            style={{ width: '100%', marginBottom: '1rem' }}
           />
-          <button type="submit">작성 완료</button>
+          <button>작성 완료</button>
         </form>
       )}
 
@@ -118,17 +116,9 @@ export default function BoardPage() {
         {letters.map((l, idx) => (
           <div
             key={idx}
-            style={{
-              border: '1px solid #ccc',
-              borderRadius: 8,
-              padding: '1rem',
-              marginBottom: '1rem',
-              background: '#f9f9f9',
-            }}
+            style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem' }}
           >
-            <p>
-              <strong>From:</strong> {l.author}
-            </p>
+            <p><strong>From:</strong> {l.author}</p>
 
             {editIndex === idx ? (
               <>
@@ -149,9 +139,7 @@ export default function BoardPage() {
             {l.author === currentUser && editIndex !== idx && (
               <div style={{ marginTop: '0.5rem' }}>
                 <button onClick={() => (setEditIndex(idx), setEditContent(l.content))}>수정</button>
-                <button onClick={() => handleDelete(idx)} style={{ marginLeft: '0.5rem' }}>
-                  삭제
-                </button>
+                <button onClick={() => handleDelete(idx)} style={{ marginLeft: '0.5rem' }}>삭제</button>
               </div>
             )}
 
@@ -162,7 +150,6 @@ export default function BoardPage() {
                   onChange={(v) => handleCommentInputChange(idx, v)}
                   onSubmit={(v) => handleCommentSubmit(idx, v)}
                 />
-
                 {comments
                   .filter((c) => c.postId === `수아-${idx}`)
                   .map((c) => (

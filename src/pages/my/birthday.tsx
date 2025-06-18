@@ -32,7 +32,6 @@ export default function MyBirthdayPage() {
           >
             <p><strong>From:</strong> {letter.author}</p>
             <p>{letter.content}</p>
-            <Link href={`/board/${currentUser}`}>내 게시판으로 이동</Link>
           </div>
         ))
       )}
