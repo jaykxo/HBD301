@@ -6,11 +6,32 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim() && password.trim()) {
-      localStorage.setItem("currentUser", name);
-      router.push("/");
+
+    if (!name.trim() || !password.trim()) {
+      alert("아이디와 비밀번호를 입력해주세요.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: name, user_pw: password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem("access_token", data.access_token); // JWT 저장
+        localStorage.setItem("currentUser", name); // 사용자 이름도 저장
+        router.push("/"); // 홈으로 이동
+      } else {
+        alert(data.error || "로그인에 실패했습니다.");
+      }
+    } catch (err) {
+      alert("서버 오류가 발생했습니다.");
     }
   };
 

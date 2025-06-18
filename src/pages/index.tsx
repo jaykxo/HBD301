@@ -1,18 +1,21 @@
 import Link from "next/link";
 import Layout from "../components/Layout";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const months = [
-    "1월", "2월", "3월",
-    "4월", "5월", "6월",
-    "7월", "8월", "9월",
-    "10월", "11월", "12월"
+    "1월", "2월", "3월", "4월", "5월", "6월",
+    "7월", "8월", "9월", "10월", "11월", "12월",
   ];
 
-  const birthdayData: Record<string, string[]> = {
-    "3월": ["이윤아"],
-    "6월": ["김재현"],
-  };
+  const [birthdayData, setBirthdayData] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    fetch("/api/birthdays")
+      .then((res) => res.json())
+      .then((data) => setBirthdayData(data))
+      .catch(() => alert("생일 데이터를 불러올 수 없습니다."));
+  }, []);
 
   return (
     <Layout>

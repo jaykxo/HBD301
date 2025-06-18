@@ -3,7 +3,6 @@ import jwt from 'jsonwebtoken';
 import mysql from 'mysql2/promise';
 
 // JWT 토큰 생성 함수
-
 const make_token = (user: { user_id: string; user_nickname: string; birth: string }) => {
   return jwt.sign(
     {
