@@ -1,195 +1,214 @@
-import { useRouter } from "next/router";
-import { useState } from "react";
-import CommentInput from "../../components/comments/CommentInput";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import CommentInput from '../../components/comments/CommentInput';
 
-type Letter = {
-  author: string;
-  content: string;
-  comment?: string;
-};
+type Letter = { id: number; author: string; content: string };
+type Comment = { id: number; postId: string; author: string; content: string };
 
 export default function BoardPage() {
-  const router = useRouter();
-  const { name } = router.query;
+  const { name } = useRouter().query as { name?: string };
 
-  const currentUser = "김재현";
+  const currentUser = '김재현';
 
-  const [letters, setLetters] = useState<Letter[]>([
-    {
-      author: "최우석",
-      content: "놀러왔어?",
-    },
-    {
-      author: "권민성",
-      content: "올해도 좋은 일만 가득하길!",
-    },
-  ]);
+  /* ---------- state ---------- */
+  const [letters, setLetters] = useState<Letter[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [commentInputs, setCommentInputs] = useState<{ [index: number]: string }>({});
-  const [comments, setComments] = useState<any[]>([]);
-
-  const [newLetter, setNewLetter] = useState({
-    content: "",
-  });
+  const [newLetter, setNewLetter] = useState({ content: '' });
 
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [editContent, setEditContent] = useState("");
+  const [editContent, setEditContent] = useState('');
 
-  // Comment edit state
+  const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
   const [commentEditId, setCommentEditId] = useState<number | null>(null);
-  const [commentEditContent, setCommentEditContent] = useState("");
-  // Comment edit handlers
-  const startCommentEdit = (id: number, content: string) => {
-    setCommentEditId(id);
-    setCommentEditContent(content);
-  };
+  const [commentEditContent, setCommentEditContent] = useState('');
 
-  const cancelCommentEdit = () => {
-    setCommentEditId(null);
-    setCommentEditContent("");
-  };
+  /* ---------- 1. 편지 목록 로드 ---------- */
+  useEffect(() => {
+    if (!name) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/letters/${name}`);
+        if (!res.ok) throw new Error(`${res.status}`);
+        setLetters(await res.json());
+      } catch (e) {
+        console.error('편지 목록 조회 오류', e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [name]);
 
-  const confirmCommentEdit = (id: number) => {
-    setComments((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, content: commentEditContent } : c))
-    );
-    setCommentEditId(null);
-    setCommentEditContent("");
-  };
-
-  const deleteComment = (id: number) => {
-    setComments((prev) => prev.filter((c) => c.id !== id));
-  };
-
-  const handleChange = (e) => {
-    setNewLetter({ content: e.target.value });
-  };
-
-  const handleSubmit = (e) => {
+  /* ---------- 2. 새 편지 작성 ---------- */
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newLetter.content) {
-      setLetters([...letters, { author: currentUser, content: newLetter.content }]);
-      setNewLetter({ content: "" });
-    }
-  };
+    if (!newLetter.content.trim() || !name) return;
 
-  const handleDelete = (index: number) => {
-    setLetters(letters.filter((_, i) => i !== index));
-  };
-
-  const startEdit = (index: number) => {
-    setEditIndex(index);
-    setEditContent(letters[index].content);
-  };
-
-  const cancelEdit = () => {
-    setEditIndex(null);
-    setEditContent("");
-  };
-
-  const confirmEdit = () => {
-    if (editIndex !== null) {
-      const updated = [...letters];
-      updated[editIndex] = {
-        ...updated[editIndex],
-        content: editContent,
-      };
-      setLetters(updated);
-      setEditIndex(null);
-      setEditContent("");
-    }
-  };
-
-  const handleCommentInputChange = (index: number, value: string) => {
-    setCommentInputs((prev) => ({ ...prev, [index]: value }));
-  };
-
-  const handleCommentSubmit = async (index: number, value: string) => {
-    if (!name || Array.from(value.trim()).length !== 1) return;
     try {
-      const response = await fetch("/api/comment/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          content: value,
-          author: currentUser,
-          postId: `${name}-${index}`,
-        }),
+      const r = await fetch('/api/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receiver: name, author: currentUser, content: newLetter.content }),
       });
+      if (!r.ok) throw new Error('작성 실패');
 
-      if (!response.ok) throw new Error("댓글 작성 실패");
-
-      const newComment = await response.json();
-      setComments((prev) => [...prev, newComment]);
-    } catch (error) {
-      console.error("댓글 작성 중 오류:", error);
+      setNewLetter({ content: '' });
+      setLetters(await (await fetch(`/api/letters/${name}`)).json());
+    } catch (err) {
+      console.error(err);
     }
   };
+
+  /* ---------- 3. 편지 수정 ---------- */
+  const confirmEdit = async () => {
+    if (editIndex === null || !name) return;
+    try {
+      await fetch('/api/update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: letters[editIndex].id, content: editContent }),
+      });
+      setLetters(await (await fetch(`/api/letters/${name}`)).json());
+    } catch (e) {
+      console.error('수정 오류', e);
+    } finally {
+      setEditIndex(null);
+      setEditContent('');
+    }
+  };
+
+  /* ---------- 4. 편지 삭제 ---------- */
+  const handleDelete = async (index: number) => {
+    if (!name) return;
+    try {
+      await fetch('/api/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: letters[index].id }),
+      });
+      setLetters((prev) => prev.filter((_, i) => i !== index));
+    } catch (e) {
+      console.error('삭제 오류', e);
+    }
+  };
+
+  /* ---------- 5. 댓글 ---------- */
+  const handleCommentInputChange = (i: number, v: string) =>
+    setCommentInputs((p) => ({ ...p, [i]: v }));
+
+  const handleCommentSubmit = async (i: number, v: string) => {
+    if (!name || !v.trim()) return;
+    try {
+      const r = await fetch('/api/comment/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: `${name}-${i}`, author: currentUser, content: v }),
+      });
+      if (!r.ok) throw new Error('댓글 작성 실패');
+      const c = await r.json();
+      setComments((prev) => [...prev, c]);
+      handleCommentInputChange(i, '');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const confirmCommentEdit = async (id: number) => {
+    try {
+      await fetch('/api/comment', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, content: commentEditContent }),
+      });
+      setComments((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, content: commentEditContent } : c)),
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCommentEditId(null);
+      setCommentEditContent('');
+    }
+  };
+
+  const deleteComment = async (id: number) => {
+    try {
+      await fetch('/api/comment', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      setComments((prev) => prev.filter((c) => c.id !== id));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  /* ---------- 6. UI ---------- */
+  if (loading) return <p>loading…</p>;
 
   return (
-    <div style={{ padding: "2rem" }}>
+    <div style={{ padding: '2rem' }}>
       <h1>{name}의 생일 편지 게시판 🎉</h1>
 
-      {/* 편지 작성 폼 */}
+      {/* 새 편지 작성 */}
       {currentUser !== name && (
-        <form onSubmit={handleSubmit} style={{ marginTop: "2rem" }}>
-          <h2>편지 쓰기</h2>
+        <form onSubmit={handleSubmit} style={{ marginTop: '2rem' }}>
           <textarea
-            name="content"
-            placeholder="내용을 입력하세요"
             value={newLetter.content}
-            onChange={handleChange}
+            onChange={(e) => setNewLetter({ content: e.target.value })}
+            placeholder="내용을 입력하세요"
             required
-            style={{ display: "block", marginBottom: "1rem", width: "100%" }}
+            style={{ width: '100%', marginBottom: '1rem' }}
           />
-          <button type="submit">작성 완료</button>
+          <button>작성 완료</button>
         </form>
       )}
 
       {/* 편지 목록 */}
-      <div style={{ marginTop: "2rem" }}>
-        {letters.map((letter, index) => (
-          <div
-            key={index}
-            style={{
-              border: "1px solid #ccc",
-              borderRadius: "8px",
-              padding: "1rem",
-              marginBottom: "1rem",
-              backgroundColor: "#f9f9f9",
-            }}
-          >
-            <p><strong>From:</strong> {letter.author}</p>
-            {editIndex === index ? (
+      <section style={{ marginTop: '2rem' }}>
+        {letters.map((l, idx) => (
+          <div key={l.id} style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem' }}>
+            <p><strong>From:</strong> {l.author}</p>
+
+            {editIndex === idx ? (
               <>
                 <textarea
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
-                  style={{ width: "100%", marginBottom: "0.5rem" }}
+                  style={{ width: '100%', marginBottom: '0.5rem' }}
                 />
                 <button onClick={confirmEdit}>수정 완료</button>
-                <button onClick={cancelEdit} style={{ marginLeft: "0.5rem" }}>취소</button>
+                <button onClick={() => setEditIndex(null)} style={{ marginLeft: '0.5rem' }}>
+                  취소
+                </button>
               </>
             ) : (
-              <p>{letter.content}</p>
+              <p>{l.content}</p>
             )}
-            {letter.author === currentUser && editIndex !== index && (
-              <div style={{ marginTop: "0.5rem" }}>
-                <button onClick={() => startEdit(index)}>수정</button>
-                <button onClick={() => handleDelete(index)} style={{ marginLeft: "0.5rem" }}>
+
+            {l.author === currentUser && editIndex !== idx && (
+              <div style={{ marginTop: '0.5rem' }}>
+                <button onClick={() => (setEditIndex(idx), setEditContent(l.content))}>수정</button>
+                <button onClick={() => handleDelete(idx)} style={{ marginLeft: '0.5rem' }}>
                   삭제
                 </button>
               </div>
             )}
+
+            {/* 댓글 */}
             {currentUser === name && (
               <>
-                <CommentInput onSubmit={(value) => handleCommentSubmit(index, value)} />
+                <CommentInput
+                  value={commentInputs[idx] ?? ''}
+                  onChange={(v) => handleCommentInputChange(idx, v)}
+                  onSubmit={(v) => handleCommentSubmit(idx, v)}
+                />
                 {comments
-                  .filter((c) => c.postId === `${name}-${index}`)
+                  .filter((c) => c.postId === `${name}-${idx}`)
                   .map((c) => (
-                    <div key={c.id} style={{ marginTop: "0.5rem" }}>
+                    <div key={c.id} style={{ marginTop: '0.5rem' }}>
                       {commentEditId === c.id ? (
                         <>
                           <input
@@ -197,12 +216,15 @@ export default function BoardPage() {
                             onChange={(e) => setCommentEditContent(e.target.value)}
                           />
                           <button onClick={() => confirmCommentEdit(c.id)}>저장</button>
-                          <button onClick={cancelCommentEdit}>취소</button>
+                          <button onClick={() => setCommentEditId(null)}>취소</button>
                         </>
                       ) : (
                         <>
                           <p>💬 {c.content} (by {c.author})</p>
-                          <button onClick={() => startCommentEdit(c.id, c.content)}>수정</button>
+                          <button onClick={() => {
+                            setCommentEditId(c.id);
+                            setCommentEditContent(c.content);
+                          }}>수정</button>
                           <button onClick={() => deleteComment(c.id)}>삭제</button>
                         </>
                       )}
@@ -212,7 +234,7 @@ export default function BoardPage() {
             )}
           </div>
         ))}
-      </div>
+      </section>
     </div>
   );
 }

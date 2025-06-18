@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
@@ -61,9 +62,7 @@ export default function LoginPage() {
       </form>
       <p style={{ textAlign: "center", marginTop: "1rem" }}>
         회원이 아니신가요?{" "}
-        <a href="/signup" style={{ color: "#0070f3", textDecoration: "underline" }}>
-          회원가입
-        </a>
+        <Link href="/signup/" className="btn">회원가입</Link>
       </p>
     </div>
   );
