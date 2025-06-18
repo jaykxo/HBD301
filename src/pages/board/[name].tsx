@@ -147,7 +147,7 @@ export default function BoardPage() {
               <>
                 <input
                   type="text"
-                  maxLength={2}
+                  maxLength={1}
                   value={commentInputs[index] ?? ""}
                   onChange={(e) => handleCommentInputChange(index, e.target.value)}
                   onKeyDown={(e) => e.stopPropagation()}
