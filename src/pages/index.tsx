@@ -8,7 +8,6 @@ export default function Home() {
     "7월", "8월", "9월", "10월", "11월", "12월",
   ];
 
-<<<<<<< HEAD
   const [birthdayData, setBirthdayData] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
@@ -17,17 +16,6 @@ export default function Home() {
       .then((data) => setBirthdayData(data))
       .catch(() => alert("생일 데이터를 불러올 수 없습니다."));
   }, []);
-=======
-  const birthdayData: Record<string, string[]> = {
-    "12월": ["이윤아"],
-    "7월": ["김재현", "이현재"],
-    "5월": ["이영준", "최우석"],
-    "6월": ["백지원"],
-    "8월": ["권민성", "김현준"],
-    "4월": ["김별", "박창현", "오주영"],
-
-  };
->>>>>>> f72ef1508e5323122f2ccce916b723e2ea9a63ee
 
   return (
     <Layout>
