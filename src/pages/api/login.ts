@@ -12,7 +12,7 @@ const make_token = (user: { user_id: string; user_nickname: string; birth: strin
       birth: user.birth,
     },
     process.env.JWT_SECRET || 'default_secret',
-    { expiresIn: '15m' }
+    { expiresIn: '1d' }
   );
 };
 
