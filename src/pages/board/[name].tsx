@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
+import CommentInput from "../../components/comments/CommentInput";
 
 type Letter = {
   author: string;
@@ -25,6 +26,7 @@ export default function BoardPage() {
   ]);
 
   const [commentInputs, setCommentInputs] = useState<{ [index: number]: string }>({});
+  const [comments, setComments] = useState<any[]>([]);
 
   const [newLetter, setNewLetter] = useState({
     content: "",
@@ -32,6 +34,32 @@ export default function BoardPage() {
 
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
+
+  // Comment edit state
+  const [commentEditId, setCommentEditId] = useState<number | null>(null);
+  const [commentEditContent, setCommentEditContent] = useState("");
+  // Comment edit handlers
+  const startCommentEdit = (id: number, content: string) => {
+    setCommentEditId(id);
+    setCommentEditContent(content);
+  };
+
+  const cancelCommentEdit = () => {
+    setCommentEditId(null);
+    setCommentEditContent("");
+  };
+
+  const confirmCommentEdit = (id: number) => {
+    setComments((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, content: commentEditContent } : c))
+    );
+    setCommentEditId(null);
+    setCommentEditContent("");
+  };
+
+  const deleteComment = (id: number) => {
+    setComments((prev) => prev.filter((c) => c.id !== id));
+  };
 
   const handleChange = (e) => {
     setNewLetter({ content: e.target.value });
@@ -76,15 +104,27 @@ export default function BoardPage() {
     setCommentInputs((prev) => ({ ...prev, [index]: value }));
   };
 
-  const handleCommentSubmit = (index: number) => {
-    const value = commentInputs[index] ?? "";
-    if (value.trim().length >= 1) {
-      setLetters((prevLetters) =>
-        prevLetters.map((letter, i) =>
-          i === index ? { ...letter, comment: value } : letter
-        )
-      );
-      setCommentInputs((prev) => ({ ...prev, [index]: "" }));
+  const handleCommentSubmit = async (index: number, value: string) => {
+    if (!name || Array.from(value.trim()).length !== 1) return;
+    try {
+      const response = await fetch("/api/comment/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: value,
+          author: currentUser,
+          postId: `${name}-${index}`,
+        }),
+      });
+
+      if (!response.ok) throw new Error("댓글 작성 실패");
+
+      const newComment = await response.json();
+      setComments((prev) => [...prev, newComment]);
+    } catch (error) {
+      console.error("댓글 작성 중 오류:", error);
     }
   };
 
@@ -145,15 +185,29 @@ export default function BoardPage() {
             )}
             {currentUser === name && (
               <>
-                <input
-                  type="text"
-                  maxLength={1}
-                  value={commentInputs[index] ?? ""}
-                  onChange={(e) => handleCommentInputChange(index, e.target.value)}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  style={{ marginRight: "0.5rem" }}
-                />
-                <button onClick={() => handleCommentSubmit(index)}>댓글 달기</button>
+                <CommentInput onSubmit={(value) => handleCommentSubmit(index, value)} />
+                {comments
+                  .filter((c) => c.postId === `${name}-${index}`)
+                  .map((c) => (
+                    <div key={c.id} style={{ marginTop: "0.5rem" }}>
+                      {commentEditId === c.id ? (
+                        <>
+                          <input
+                            value={commentEditContent}
+                            onChange={(e) => setCommentEditContent(e.target.value)}
+                          />
+                          <button onClick={() => confirmCommentEdit(c.id)}>저장</button>
+                          <button onClick={cancelCommentEdit}>취소</button>
+                        </>
+                      ) : (
+                        <>
+                          <p>💬 {c.content} (by {c.author})</p>
+                          <button onClick={() => startCommentEdit(c.id, c.content)}>수정</button>
+                          <button onClick={() => deleteComment(c.id)}>삭제</button>
+                        </>
+                      )}
+                    </div>
+                  ))}
               </>
             )}
           </div>

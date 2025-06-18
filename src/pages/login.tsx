@@ -18,7 +18,7 @@ export default function LoginPage() {
     <div style={{ maxWidth: "400px", margin: "2rem auto", padding: "1rem" }}>
       <h1 style={{ textAlign: "center" }}>🎈 로그인</h1>
       <form onSubmit={handleSubmit}>
-        <label>이름</label>
+        <label>아이디</label>
         <input
           type="text"
           value={name}
