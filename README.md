@@ -1,40 +1,105 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🎂 반 친구 생일 편지 게시판
 
-## Getting Started
+우리 반 친구들에게 생일마다 따뜻한 한 마디를 건넬 수 있는, 아주 특별한 생일 편지 게시판입니다.  
+이 프로젝트는 **사소하지만 잊기 쉬운 생일 축하 인사**를, 조금 더 의미 있고 기록에 남도록 전달하기 위해 만들어졌습니다.
 
-First, run the development server:
+[📄 기획안 보기 (최종)](https://github.com/user-attachments/files/20817180/default.pdf)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📌 프로젝트 개요
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+- 반 친구 27명 각각의 생일을 축하할 수 있는 **이름 기반 게시판** 자동 생성
+- 편지 한 통, 댓글 한 마디로 충분한 **심플한 UI/UX**
+- 생일 당사자만 댓글 작성 가능, 단 한 글자만 허용 (이모지 중심)
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+---
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## ✅ 주요 기능 요약
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+### 👤 회원 시스템
+- 회원가입 (이름, 아이디, 비밀번호, 생일 입력)
+- JWT 기반 로그인 인증
 
-## Learn More
+### 📝 편지 게시판
+- `/board/[이름]` 경로로 게시판 생성
+- 1인 1편지 작성 가능 (중복 방지)
+- 편지 수정/삭제 (작성자 본인만)
+- 최신순 정렬
 
-To learn more about Next.js, take a look at the following resources:
+### 💬 댓글 기능
+- 생일자 본인만 댓글 작성 가능
+- 이모지/한 글자만 허용
+- 편지 1개당 댓글 1개 제한
+- 댓글 수정/삭제 가능
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 📄 개인화 기능
+- `/my/letters`: 내가 쓴 편지 모아보기
+- `/my/birthday`: 내 생일에 받은 편지 모아보기
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### ⏰ 기타 기능
+- 생일 D-day 알림: "D-3 정연 생일이에요!" 등 알림 기능
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🧰 기술 스택 및 구성
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+| 항목     | 내용 |
+|----------|------|
+| 프론트엔드 | **Next.js** (Pages Router + API Routes) |
+| 인증 방식 | **JWT** |
+| 백엔드 DB | **MySQL** (Railway 연동) |
+| 배포 환경 | **Vercel**, Railway (예정) |
+
+---
+
+## 🗂 DB 구조 (ERD 요약)
+
+- **User**: 이름, 아이디, 비밀번호, 생일
+- **Letter**: 작성자, 수신자, 편지 제목/내용, 생성일
+- **Comment**: 생일자 작성 한 글자(이모지) 댓글
+
+---
+
+## 📡 API 명세 (일부)
+
+- `POST /api/signup` – 회원가입
+- `POST /api/login` – 로그인
+- `POST /api/create` – 편지 작성
+- `PUT /api/update` – 편지 수정
+- `DELETE /api/delete` – 편지 삭제
+- `GET /api/my/letters` – 내가 쓴 편지 목록
+- `GET /api/my/birthday` – 내 생일 받은 편지 목록
+- `POST /api/comment` – 댓글 작성 (생일자 한정)
+
+---
+
+## 📍 라우팅 구조
+
+- `/signup`, `/login`
+- `/board/[name]` – 해당 친구의 생일 게시판
+- `/my/letters` – 내가 남긴 편지 모음
+- `/my/birthday` – 내가 받은 편지 모음
+
+---
+
+## 🧑‍🤝‍🧑 팀 소개
+
+| 역할 | 이름 |
+|------|------|
+| 👑 팀장 | 이윤아 |
+| 🧠 부팀장 | 김재현 |
+
+---
+
+## 📝 프로젝트 기획안
+
+기획안 PDF 파일에 더 많은 정보가 담겨 있어요!  
+→ [👉 최종 기획안 보기](https://github.com/user-attachments/files/20817180/default.pdf)
+
+---
+
+## 📌 저장소 주소
+
+🔗 GitHub: [https://github.com/Profitah/task14](https://github.com/Profitah/task14)
+
