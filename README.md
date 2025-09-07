@@ -97,9 +97,5 @@
 기획안 PDF 파일에 더 많은 정보가 담겨 있어요!  
 → [👉 최종 기획안 보기](https://github.com/user-attachments/files/20817180/default.pdf)
 
----
 
-## 📌 저장소 주소
-
-🔗 GitHub: [https://github.com/Profitah/task14](https://github.com/Profitah/task14)
 
